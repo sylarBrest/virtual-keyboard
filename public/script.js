@@ -1,0 +1,1 @@
+(()=>{"use strict";(()=>{const e=document.createElement("div");e.classList.add("container");const t=document.createElement("div");t.classList.add("hello"),document.body.prepend(e),e.append(t)})(),console.log("let's start")})();

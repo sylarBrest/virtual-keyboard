@@ -1,0 +1,2 @@
+*{margin:0;padding:0;box-sizing:border-box}body{height:100vh;width:100vw;background-color:aqua}.container{max-width:500px;width:100%;height:100px;margin:0 auto;background-color:antiquewhite}.container .hello{max-width:70%;background-color:burlywood}.container .hello .world{font-family:'fantasy', serif;font-size:20px;color:black}
+
