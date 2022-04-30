@@ -8,6 +8,11 @@ class Keyboard {
       keyboardContainer: null,
       keys: [],
     };
+    this.properties = {
+      value: '',
+      isCapsLock: false,
+      lang: 'en',
+    };
   }
 
   init() {
@@ -27,15 +32,36 @@ class Keyboard {
   createKeys() {
     const keyboardFragment = document.createDocumentFragment();
     const keyLayout = [
-      'backticks', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'backspace',
+      'backtick', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'backspace',
       'tab', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\\', 'del',
       'capslock', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', 'enter',
       'leftshift', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 'uparrow', 'rightshift',
-      'leftctrl', 'leftalt', 'spacebar', 'rightalt', 'leftarrow', 'downarrow', 'rightarrow', 'rightctrl',
+      'leftctrl', 'win', 'leftalt', 'spacebar', 'rightalt', 'leftarrow', 'downarrow', 'rightarrow', 'rightctrl',
     ];
 
-    keyLayout.forEach(key => {
+    keyLayout.forEach((key) => {
       const keyElement = document.createElement('button');
+      keyElement.setAttribute('type', 'button');
+      keyElement.classList.add('key');
+      keyElement.textContent = key.toLowerCase();
+      switch (key) {
+        case 'backtick':
+          keyElement.textContent = '`';
+          break;
+        case 'backspace':
+        case 'capslock':
+        case 'enter':
+        case 'leftshift':
+        case 'rightshift':
+          keyElement.classList.add('wide');
+          break;
+        case 'spacebar':
+          keyElement.classList.add('ultrawide');
+          break;
+        default:
+          this.properties.value += (this.properties.isCapsLock) ? key.toUpperCase() : key.toLowerCase();
+          break;
+      }
 
       keyboardFragment.append(keyElement);
     });
@@ -47,6 +73,13 @@ class Keyboard {
     this.elements.main.appendChild(this.elements.textarea);
     this.elements.main.appendChild(this.elements.keyboardContainer);
     this.elements.keyboardContainer.appendChild(this.createKeys());
+
+    this.elements.keys = this.elements.keyboardContainer.querySelectorAll('.key');
+  }
+
+  toString() {
+    //return this.elements.keys;
+    return this.properties;
   }
 }
 
@@ -55,3 +88,4 @@ console.log('Virtual Keyboard task started');
 const kb = new Keyboard();
 kb.init();
 kb.render();
+console.log(kb.toString());

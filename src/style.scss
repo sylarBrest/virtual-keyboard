@@ -16,7 +16,7 @@ body {
 }
 
 .main-container {
-    max-width: 1000px;
+    max-width: 40px * 15 + 7px * 14 + 80px;
     width: 100%;
     height: auto;
     margin: 0 auto;
@@ -24,6 +24,7 @@ body {
     background-color: antiquewhite;
     display: flex;
     flex-flow: column;
+    align-items: center;
     gap: 20px;
     justify-content: center;
 
@@ -41,6 +42,7 @@ body {
         width: 40px * 15 + 7px * 14;
         gap: 7px;
         flex-wrap: wrap;
+        justify-content: center;
 
         .key {
             height: 40px;
@@ -48,6 +50,17 @@ body {
             display: flex;
             justify-content: center;
             align-items: center;
+            font: inherit;
+            cursor: pointer;
+            border: 0;
+
+            &.wide {
+                width: 87px;
+            }
+
+            &.ultrawide {
+                width: 40px * 7 + 7px * 6;
+            }
         }
     }
 }
