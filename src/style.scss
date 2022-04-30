@@ -7,26 +7,47 @@
 body {
     height: 100vh;
     width: 100vw;
-    background-color: aqua;
+    background-color: #cecece;
+    font: {
+        family: sans-serif;
+        size: 20px;
+    }
+    color: black;
 }
 
-.container {
-    max-width: 500px;
+.main-container {
+    max-width: 1000px;
     width: 100%;
-    height: 100px;
+    height: auto;
     margin: 0 auto;
+    padding: 20px 40px;
     background-color: antiquewhite;
+    display: flex;
+    flex-flow: column;
+    gap: 20px;
+    justify-content: center;
 
-    .hello {
-        max-width: 70%;
-        background-color: burlywood;
+    .textarea {
+        width: 70%;
+        margin: 0 auto;
+        padding: 5px;
+        font: inherit;
+        resize: none;
+        outline: 0;
+    }
 
-        .world {
-            font: {
-                family: 'fantasy', serif;
-                size: 20px;
-            }
-            color: black;
+    .keyboard {
+        display: flex;
+        width: 40px * 15 + 7px * 14;
+        gap: 7px;
+        flex-wrap: wrap;
+
+        .key {
+            height: 40px;
+            width: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
     }
 }
