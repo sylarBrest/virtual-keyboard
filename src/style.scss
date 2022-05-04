@@ -21,7 +21,6 @@ body {
     height: auto;
     margin: 0 auto;
     padding: 20px 40px;
-    background-color: antiquewhite;
     display: flex;
     flex-flow: column;
     align-items: center;
@@ -52,7 +51,9 @@ body {
             align-items: center;
             font: inherit;
             cursor: pointer;
+            transition: 0.3s all;
             border: 0;
+            border-radius: 5px;
 
             &.wide {
                 width: 87px;
@@ -60,6 +61,14 @@ body {
 
             &.ultrawide {
                 width: 40px * 7 + 7px * 6;
+            }
+
+            &.text {
+                font-size: 16px;
+                font-weight: 700;
+            }
+            &:active {
+                background: #838383;
             }
         }
     }
