@@ -11,6 +11,7 @@ export default class Keyboard {
       isCapsLock: false,
       isShiftPressed: false,
       lang: 'en',
+      cursorPosition: 0,
     };
   }
 
@@ -54,6 +55,7 @@ export default class Keyboard {
         case 'del':
           keyElement.classList.add('text');
           keyElement.innerHTML = 'del';
+          keyElement.addEventListener('click', () => this.delClick(content));
           break;
         case 'leftctrl':
         case 'rightctrl':
@@ -92,6 +94,7 @@ export default class Keyboard {
         case 'backspace':
           keyElement.classList.add('wide');
           keyElement.innerHTML = iconForKey('keyboard_backspace');
+          keyElement.addEventListener('click', () => this.backspaceClick(content));
           break;
         case 'capslock':
           keyElement.classList.add('wide');
@@ -131,9 +134,26 @@ export default class Keyboard {
   mouseClick(content = '') {
     const value = (this.properties.isCapsLock) ? content.toUpperCase() : content;
     const textArea = this.elements.textarea;
-    textArea.setRangeText(value, textArea.selectionStart, textArea.selectionEnd);
+    if (textArea.selectionEnd >= 0) {
+      textArea.setRangeText(value, textArea.selectionStart, textArea.selectionEnd);
+    }
     this.elements.textarea.focus();
-    this.elements.textarea.selectionStart = this.elements.textarea.selectionEnd + 1;
+    this.elements.textarea.selectionStart = textArea.selectionEnd + 1;
+  }
+
+  delClick() {
+    const textArea = this.elements.textarea;
+    textArea.setRangeText('', textArea.selectionStart, textArea.selectionEnd + 1);
+    textArea.selectionEnd -= 1;
+  }
+
+  backspaceClick() {
+    const textArea = this.elements.textarea;
+    const start = textArea.selectionStart - 1;
+    // if (start < 0) start = 0;
+    console.log('222', start, textArea.selectionEnd);
+    if (start >= 0) textArea.setRangeText('', start, textArea.selectionEnd);
+    textArea.selectionEnd -= 1;
   }
 
   capsLockOn() {
@@ -149,6 +169,7 @@ export default class Keyboard {
 
   shiftKeyOn() {
     this.properties.isShiftPressed = !this.properties.isShiftPressed;
+    console.log(this.properties.isShiftPressed);
   }
 
   render() {
