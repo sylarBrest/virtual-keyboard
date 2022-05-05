@@ -5,4 +5,3 @@ console.log('Virtual Keyboard task started');
 
 const kb = new Keyboard();
 kb.init();
-console.log(kb.toString());

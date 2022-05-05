@@ -46,7 +46,6 @@ export default class Keyboard {
 
     keyLayout.forEach((key) => {
       const keyElement = document.createElement('button');
-      let content;
       keyElement.setAttribute('type', 'button');
       keyElement.classList.add('key');
 
@@ -55,7 +54,7 @@ export default class Keyboard {
         case 'del':
           keyElement.classList.add('text');
           keyElement.innerHTML = 'del';
-          keyElement.addEventListener('click', () => this.delClick(content));
+          // keyElement.addEventListener('click', () => this.delClick(content));
           break;
         case 'leftctrl':
         case 'rightctrl':
@@ -70,10 +69,10 @@ export default class Keyboard {
         // Normal buttons with icons
         case 'backtick':
           keyElement.classList.add('symbol');
-          [keyElement.textContent, content] = ['`', '`'];
+          keyElement.textContent = '`';
           break;
         case 'tab':
-          [keyElement.innerHTML, content] = [iconForKey('keyboard_tab'), '\t'];
+          keyElement.innerHTML = iconForKey('keyboard_tab');
           break;
         case 'win':
           keyElement.innerHTML = iconForKey('window');
@@ -94,66 +93,84 @@ export default class Keyboard {
         case 'backspace':
           keyElement.classList.add('wide');
           keyElement.innerHTML = iconForKey('keyboard_backspace');
-          keyElement.addEventListener('click', () => this.backspaceClick(content));
+          // keyElement.addEventListener('click', () => this.backspaceClick(content));
           break;
         case 'capslock':
           keyElement.classList.add('wide');
           keyElement.innerHTML = iconForKey('keyboard_capslock');
-          keyElement.addEventListener('click', () => {
-            keyElement.classList.toggle('pressed');
-            this.capsLockOn();
-          });
           break;
         case 'enter':
           keyElement.classList.add('wide');
-          [keyElement.innerHTML, content] = [iconForKey('keyboard_return'), '\n'];
+          keyElement.innerHTML = iconForKey('keyboard_return');
           break;
         case 'leftshift':
         case 'rightshift':
           keyElement.classList.add('wide');
           keyElement.innerHTML = iconForKey('publish');
-          keyElement.addEventListener('click', () => this.shiftKeyOn());
           break;
           // Ultrawide (spacebar)
         case 'spacebar':
           keyElement.classList.add('ultrawide');
-          [keyElement.innerHTML, content] = [iconForKey('space_bar'), ' '];
+          keyElement.innerHTML = iconForKey('space_bar');
           break;
         default:
           keyElement.classList.add('symbol');
-          [content, keyElement.innerHTML] = [key, key];
+          keyElement.innerHTML = key;
           break;
       }
-      keyElement.addEventListener('click', () => this.mouseClick(content));
+      keyElement.setAttribute('data-key', key);
+
+      keyElement.addEventListener('click', (event) => this.mouseClick(event));
 
       keyboardFragment.append(keyElement);
     });
     return keyboardFragment;
   }
 
-  mouseClick(content = '') {
-    const value = (this.properties.isCapsLock) ? content.toUpperCase() : content;
+  mouseClick(event) {
+    const content = event.currentTarget.dataset.key;
     const textArea = this.elements.textarea;
-    if (textArea.selectionEnd >= 0) {
-      textArea.setRangeText(value, textArea.selectionStart, textArea.selectionEnd);
+    let cursorPosition = textArea.selectionStart + 1;
+    let [value, start, end] = [
+      (this.properties.isCapsLock) ? content.toUpperCase() : content,
+      textArea.selectionStart,
+      textArea.selectionEnd,
+    ];
+    switch (content) {
+      case 'del':
+        [value, end] = ['', textArea.selectionEnd + 1];
+        break;
+      case 'backspace':
+        [value, start] = ['', textArea.selectionStart - 1];
+        break;
+      case 'enter':
+        value = '\n';
+        break;
+      case 'tab':
+        value = '\t';
+        break;
+      case 'backtick':
+        value = '`';
+        break;
+      case 'spacebar':
+        value = ' ';
+        break;
+      case 'capslock':
+        event.currentTarget.classList.toggle('pressed');
+        value = '';
+        cursorPosition = textArea.selectionStart;
+        this.capsLockOn();
+        break;
+      default:
+        break;
     }
+    if (start >= 0) textArea.setRangeText(value, start, end);
+    if (content === 'del' || content === 'backspace') {
+      cursorPosition = textArea.selectionStart;
+    }
+
     this.elements.textarea.focus();
-    this.elements.textarea.selectionStart = textArea.selectionEnd + 1;
-  }
-
-  delClick() {
-    const textArea = this.elements.textarea;
-    textArea.setRangeText('', textArea.selectionStart, textArea.selectionEnd + 1);
-    textArea.selectionEnd -= 1;
-  }
-
-  backspaceClick() {
-    const textArea = this.elements.textarea;
-    const start = textArea.selectionStart - 1;
-    // if (start < 0) start = 0;
-    console.log('222', start, textArea.selectionEnd);
-    if (start >= 0) textArea.setRangeText('', start, textArea.selectionEnd);
-    textArea.selectionEnd -= 1;
+    this.elements.textarea.selectionStart = cursorPosition;
   }
 
   capsLockOn() {
