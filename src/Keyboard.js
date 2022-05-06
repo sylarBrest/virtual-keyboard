@@ -166,12 +166,12 @@ export default class Keyboard {
 
   chooseSymbol(symbol) {
     const [lang, langShift] = [this.properties.lang, `${this.properties.lang}Shift`];
-    const letter = this.layouts[lang][this.layouts.en.indexOf(symbol)];
+    const letter = this.layouts[lang][this.keyCodes.indexOf(symbol)];
     let res = (this.properties.isCapsLock)
       ? letter.toUpperCase()
       : letter;
     if (this.properties.isShiftPressed) {
-      res = this.layouts[langShift][this.layouts.en.indexOf(symbol)];
+      res = this.layouts[langShift][this.keyCodes.indexOf(symbol)];
     }
     return (this.properties.isCapsLock && this.properties.isShiftPressed) ? res.toLowerCase() : res;
   }
@@ -179,7 +179,7 @@ export default class Keyboard {
   reLoadKeys(nodes) {
     nodes.forEach((key) => {
       const el = key;
-      el.textContent = this.chooseSymbol(el.dataset.key);
+      el.textContent = this.chooseSymbol(el.dataset.code);
     });
     if (this.properties.isLangSwitched) {
       this.properties.isLangSwitched = !this.properties.isLangSwitched;
@@ -187,6 +187,9 @@ export default class Keyboard {
   }
 
   keyboardClick(event) {
+    if (event.type === 'keydown' && event.code !== 'F5') {
+      event.preventDefault();
+    }
     const kCode = event.code;
     const keys = this.elements.keyboardContainer.querySelectorAll('.key');
     this.keyCodes.forEach((keyCode, index) => {
@@ -196,97 +199,112 @@ export default class Keyboard {
       }
     });
     if (event.type === 'keyup') {
+      this.toDo(keys[this.keyCodes.indexOf(kCode)]);
       this.checkCtrlAlt();
+    }
+  }
+
+  toDo(node) {
+    if (node) {
+      const content = node.dataset.code;
+      const textArea = this.elements.textarea;
+      let cursorPosition = textArea.selectionStart + 1;
+      let [value, start, end] = [
+        this.chooseSymbol(content),
+        textArea.selectionStart,
+        textArea.selectionEnd,
+      ];
+      switch (content) {
+        case 'Delete':
+          [value, end] = ['', textArea.selectionEnd + 1];
+          break;
+        case 'Backspace':
+          [value, start] = ['', textArea.selectionStart - 1];
+          break;
+        case 'Enter':
+          value = '\n';
+          break;
+        case 'Tab':
+          value = '\t';
+          break;
+        case 'Space':
+          value = ' ';
+          break;
+        case 'CapsLock':
+          if (!this.properties.isCapsLock) {
+            node.classList.add('pressed');
+          } else {
+            node.classList.remove('pressed');
+          }
+          [value, cursorPosition] = ['', textArea.selectionStart];
+          this.capsLockOn();
+          break;
+        case 'ShiftRight':
+        case 'ShiftLeft':
+          [value, cursorPosition] = ['', textArea.selectionStart];
+          this.shiftKeyOn(node);
+          break;
+        case 'ControlLeft':
+        case 'ControlRight':
+          node.classList.toggle('pressed');
+          this.properties.isCtrlPressed = !this.properties.isCtrlPressed;
+          [value, cursorPosition] = ['', textArea.selectionStart];
+          break;
+        case 'AltLeft':
+        case 'AltRight':
+          node.classList.toggle('pressed');
+          this.properties.isAltPressed = !this.properties.isAltPressed;
+          [value, cursorPosition] = ['', textArea.selectionStart];
+          break;
+        case 'OSLeft':
+          [value, cursorPosition] = ['', textArea.selectionStart];
+          break;
+        case 'ArrowUp':
+          value = '∧';
+          break;
+        case 'ArrowDown':
+          value = '∨';
+          break;
+        case 'ArrowLeft':
+          value = '<';
+          break;
+        case 'ArrowRight':
+          value = '>';
+          break;
+        default:
+          break;
+      }
+      if (start >= 0) textArea.setRangeText(value, start, end);
+      // change cursor position after pressing del or backspace buttons
+      if (content === 'Delete' || content === 'Backspace') {
+        cursorPosition = textArea.selectionStart;
+      }
+      // shift key works only once after press any button except both shifts and capslock
+      if (content !== 'ShiftLeft' && content !== 'ShiftRight' && content !== 'CapsLock') {
+        if (this.properties.isShiftPressed) this.shiftKeyOn();
+      }
+
+      // switching langs
+      if (this.properties.isCtrlPressed && this.properties.isAltPressed) {
+        this.switchLang();
+      }
+
+      this.elements.textarea.focus();
+      this.elements.textarea.selectionStart = cursorPosition;
     }
   }
 
   checkCtrlAlt() {
     const keys = this.elements.keyboardContainer.querySelectorAll('.key');
-    keys.forEach((key) => key.classList.remove('pressed'));
+    keys.forEach((key) => {
+      if (key.dataset.code !== 'ShiftLeft' && key.dataset.code !== 'ShiftRight' && key.dataset.code !== 'CapsLock') {
+        key.classList.remove('pressed');
+      }
+    });
   }
 
   mouseClick(event) {
-    const content = event.currentTarget.dataset.key;
-    const textArea = this.elements.textarea;
-    let cursorPosition = textArea.selectionStart + 1;
-    let [value, start, end] = [
-      this.chooseSymbol(content),
-      textArea.selectionStart,
-      textArea.selectionEnd,
-    ];
-    switch (content) {
-      case 'del':
-        [value, end] = ['', textArea.selectionEnd + 1];
-        break;
-      case 'backspace':
-        [value, start] = ['', textArea.selectionStart - 1];
-        break;
-      case 'enter':
-        value = '\n';
-        break;
-      case 'tab':
-        value = '\t';
-        break;
-      case 'spacebar':
-        value = ' ';
-        break;
-      case 'capslock':
-        event.currentTarget.classList.toggle('pressed');
-        [value, cursorPosition] = ['', textArea.selectionStart];
-        this.capsLockOn();
-        break;
-      case 'rightshift':
-      case 'leftshift':
-        [value, cursorPosition] = ['', textArea.selectionStart];
-        this.shiftKeyOn(event.currentTarget);
-        break;
-      case 'leftctrl':
-      case 'rightctrl':
-        event.currentTarget.classList.toggle('pressed');
-        this.properties.isCtrlPressed = !this.properties.isCtrlPressed;
-        [value, cursorPosition] = ['', textArea.selectionStart];
-        break;
-      case 'leftalt':
-      case 'rightalt':
-        event.currentTarget.classList.toggle('pressed');
-        this.properties.isAltPressed = !this.properties.isAltPressed;
-        [value, cursorPosition] = ['', textArea.selectionStart];
-        break;
-      case 'win':
-        [value, cursorPosition] = ['', textArea.selectionStart];
-        break;
-      case 'uparrow':
-        value = '∧';
-        break;
-      case 'downarrow':
-        value = '∨';
-        break;
-      case 'leftarrow':
-        value = '<';
-        break;
-      case 'rightarrow':
-        value = '>';
-        break;
-      default:
-        break;
-    }
-    if (start >= 0) textArea.setRangeText(value, start, end);
-    // change cursor position after pressing del or backspace buttons
-    if (content === 'del' || content === 'backspace') {
-      cursorPosition = textArea.selectionStart;
-    }
-    // shift key works only once after press any button except both shifts and capslock
-    if (content !== 'leftshift' && content !== 'rightshift' && content !== 'capslock') {
-      if (this.properties.isShiftPressed) this.shiftKeyOn();
-    }
-
-    // switching langs
-    if (this.properties.isCtrlPressed && this.properties.isAltPressed) {
-      this.switchLang();
-    }
-
-    this.elements.textarea.focus();
-    this.elements.textarea.selectionStart = cursorPosition;
+    this.toDo(event.currentTarget);
   }
 
   capsLockOn() {
