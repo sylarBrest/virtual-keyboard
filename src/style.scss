@@ -9,7 +9,7 @@ body {
     width: 100vw;
     background-color: #cecece;
     font: {
-        family: sans-serif;
+        family: monospace;
         size: 20px;
     }
     color: black;
@@ -50,6 +50,7 @@ body {
             justify-content: center;
             align-items: center;
             font: inherit;
+            font-family: sans-serif;
             cursor: pointer;
             transition: 0.3s all;
             border: 0;

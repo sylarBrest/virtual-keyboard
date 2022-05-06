@@ -13,6 +13,22 @@ export default class Keyboard {
       lang: 'en',
       cursorPosition: 0,
     };
+    this.layouts = {
+      en: [
+        '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'backspace',
+        'tab', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\\', 'del',
+        'capslock', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', 'enter',
+        'leftshift', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 'uparrow', 'rightshift',
+        'leftctrl', 'win', 'leftalt', 'spacebar', 'rightalt', 'leftarrow', 'downarrow', 'rightarrow', 'rightctrl',
+      ],
+      enShift: [
+        '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 'backspace',
+        'tab', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '|', 'del',
+        'capslock', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', 'enter',
+        'leftshift', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 'uparrow', 'rightshift',
+        'leftctrl', 'win', 'leftalt', 'spacebar', 'rightalt', 'leftarrow', 'downarrow', 'rightarrow', 'rightctrl',
+      ],
+    };
   }
 
   init() {
@@ -24,6 +40,7 @@ export default class Keyboard {
     this.elements.textarea.classList.add('textarea');
     this.elements.textarea.setAttribute('autofocus', 'autofocus');
     this.elements.textarea.setAttribute('rows', '10');
+    this.elements.textarea.setAttribute('cols', '62');
 
     this.elements.keyboardContainer = document.createElement('div');
     this.elements.keyboardContainer.classList.add('keyboard');
@@ -34,13 +51,7 @@ export default class Keyboard {
 
   createKeys() {
     const keyboardFragment = document.createDocumentFragment();
-    const keyLayout = [
-      'backtick', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'backspace',
-      'tab', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\\', 'del',
-      'capslock', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', 'enter',
-      'leftshift', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 'uparrow', 'rightshift',
-      'leftctrl', 'win', 'leftalt', 'spacebar', 'rightalt', 'leftarrow', 'downarrow', 'rightarrow', 'rightctrl',
-    ];
+    const keyLayout = this.layouts.en;
 
     const iconForKey = (iconName) => `<span class="material-icons">${iconName}</span>`;
 
@@ -54,7 +65,6 @@ export default class Keyboard {
         case 'del':
           keyElement.classList.add('text');
           keyElement.innerHTML = 'del';
-          // keyElement.addEventListener('click', () => this.delClick(content));
           break;
         case 'leftctrl':
         case 'rightctrl':
@@ -93,7 +103,6 @@ export default class Keyboard {
         case 'backspace':
           keyElement.classList.add('wide');
           keyElement.innerHTML = iconForKey('keyboard_backspace');
-          // keyElement.addEventListener('click', () => this.backspaceClick(content));
           break;
         case 'capslock':
           keyElement.classList.add('wide');
@@ -106,6 +115,7 @@ export default class Keyboard {
         case 'leftshift':
         case 'rightshift':
           keyElement.classList.add('wide');
+          keyElement.classList.add('shift');
           keyElement.innerHTML = iconForKey('publish');
           break;
           // Ultrawide (spacebar)
@@ -127,12 +137,31 @@ export default class Keyboard {
     return keyboardFragment;
   }
 
+  chooseSymbol(symbol) {
+    let res = (this.properties.isCapsLock)
+      ? symbol.toUpperCase()
+      : symbol;
+    if (this.properties.isShiftPressed) {
+      res = this.layouts.enShift[this.layouts.en.indexOf(symbol)];
+    }
+    return res;
+  }
+
+  reLoadKeys(nodes) {
+    nodes.forEach((key) => {
+      const el = key;
+      el.textContent = this.chooseSymbol(el.dataset.key);
+    });
+  }
+
   mouseClick(event) {
     const content = event.currentTarget.dataset.key;
     const textArea = this.elements.textarea;
     let cursorPosition = textArea.selectionStart + 1;
     let [value, start, end] = [
-      (this.properties.isCapsLock) ? content.toUpperCase() : content,
+      (this.properties.isCapsLock)
+        ? this.chooseSymbol(content).toUpperCase()
+        : this.chooseSymbol(content),
       textArea.selectionStart,
       textArea.selectionEnd,
     ];
@@ -149,17 +178,37 @@ export default class Keyboard {
       case 'tab':
         value = '\t';
         break;
-      case 'backtick':
-        value = '`';
-        break;
       case 'spacebar':
         value = ' ';
         break;
       case 'capslock':
         event.currentTarget.classList.toggle('pressed');
-        value = '';
-        cursorPosition = textArea.selectionStart;
+        [value, cursorPosition] = ['', textArea.selectionStart];
         this.capsLockOn();
+        break;
+      case 'rightshift':
+      case 'leftshift':
+        [value, cursorPosition] = ['', textArea.selectionStart];
+        this.shiftKeyOn(event.currentTarget);
+        break;
+      case 'leftctrl':
+      case 'rightctrl':
+      case 'leftalt':
+      case 'rightalt':
+      case 'win':
+        [value, cursorPosition] = ['', textArea.selectionStart];
+        break;
+      case 'uparrow':
+        value = '∧';
+        break;
+      case 'downarrow':
+        value = '∨';
+        break;
+      case 'leftarrow':
+        value = '<';
+        break;
+      case 'rightarrow':
+        value = '>';
         break;
       default:
         break;
@@ -176,17 +225,19 @@ export default class Keyboard {
   capsLockOn() {
     this.properties.isCapsLock = !this.properties.isCapsLock;
     const keys = this.elements.keyboardContainer.querySelectorAll('.symbol');
-    keys.forEach((key) => {
-      const el = key;
-      el.textContent = this.properties.isCapsLock
-        ? el.textContent.toUpperCase()
-        : el.textContent.toLowerCase();
-    });
+    this.reLoadKeys(keys);
   }
 
-  shiftKeyOn() {
+  shiftKeyOn(node) {
     this.properties.isShiftPressed = !this.properties.isShiftPressed;
-    console.log(this.properties.isShiftPressed);
+    const shifts = this.elements.keyboardContainer.querySelectorAll('.shift');
+    const keys = this.elements.keyboardContainer.querySelectorAll('.symbol');
+    if (this.properties.isShiftPressed) {
+      node.classList.add('pressed');
+    } else {
+      shifts.forEach((key) => key.classList.remove('pressed'));
+    }
+    this.reLoadKeys(keys);
   }
 
   render() {
