@@ -7,11 +7,11 @@ export default class Keyboard {
       keys: [],
     };
     this.properties = {
-      value: '',
       isCapsLock: false,
       isShiftPressed: false,
+      isCtrlPressed: false,
+      isAltPressed: false,
       lang: 'en',
-      cursorPosition: 0,
     };
     this.layouts = {
       en: [
@@ -26,6 +26,20 @@ export default class Keyboard {
         'tab', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '|', 'del',
         'capslock', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', 'enter',
         'leftshift', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 'uparrow', 'rightshift',
+        'leftctrl', 'win', 'leftalt', 'spacebar', 'rightalt', 'leftarrow', 'downarrow', 'rightarrow', 'rightctrl',
+      ],
+      ru: [
+        'ё', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'backspace',
+        'tab', 'й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ', '\\', 'del',
+        'capslock', 'ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э', 'enter',
+        'leftshift', 'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю', '.', 'uparrow', 'rightshift',
+        'leftctrl', 'win', 'leftalt', 'spacebar', 'rightalt', 'leftarrow', 'downarrow', 'rightarrow', 'rightctrl',
+      ],
+      ruShift: [
+        'Ё', '!', '"', '№', ';', '%', ':', '?', '*', '(', ')', '_', '+', 'backspace',
+        'tab', 'Й', 'Ц', 'У', 'К', 'Е', 'Н', 'Г', 'Ш', 'Щ', 'З', 'Х', 'Ъ', '/', 'del',
+        'capslock', 'Ф', 'Ы', 'В', 'А', 'П', 'Р', 'О', 'Л', 'Д', 'Ж', 'Э', 'enter',
+        'leftshift', 'Я', 'Ч', 'С', 'М', 'И', 'Т', 'Ь', 'Б', 'Ю', ',', 'uparrow', 'rightshift',
         'leftctrl', 'win', 'leftalt', 'spacebar', 'rightalt', 'leftarrow', 'downarrow', 'rightarrow', 'rightctrl',
       ],
     };
@@ -51,7 +65,7 @@ export default class Keyboard {
 
   createKeys() {
     const keyboardFragment = document.createDocumentFragment();
-    const keyLayout = this.layouts.en;
+    const keyLayout = this.layouts[this.properties.lang];
 
     const iconForKey = (iconName) => `<span class="material-icons">${iconName}</span>`;
 
@@ -212,10 +226,14 @@ export default class Keyboard {
         break;
     }
     if (start >= 0) textArea.setRangeText(value, start, end);
+    // change cursor position after pressing del or backspace buttons
     if (content === 'del' || content === 'backspace') {
       cursorPosition = textArea.selectionStart;
     }
-
+    // shift key works only once after press any button except both shifts and capslock
+    if (content !== 'leftshift' && content !== 'rightshift' && content !== 'capslock') {
+      if (this.properties.isShiftPressed) this.shiftKeyOn();
+    }
     this.elements.textarea.focus();
     this.elements.textarea.selectionStart = cursorPosition;
   }
@@ -226,12 +244,12 @@ export default class Keyboard {
     this.reLoadKeys(keys);
   }
 
-  shiftKeyOn(node) {
+  shiftKeyOn(node = null) {
     this.properties.isShiftPressed = !this.properties.isShiftPressed;
     const shifts = this.elements.keyboardContainer.querySelectorAll('.shift');
     const keys = this.elements.keyboardContainer.querySelectorAll('.symbol');
     if (this.properties.isShiftPressed) {
-      node.classList.add('pressed');
+      if (node !== null) node.classList.add('pressed');
     } else {
       shifts.forEach((key) => key.classList.remove('pressed'));
     }
