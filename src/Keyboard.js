@@ -5,6 +5,7 @@ export default class Keyboard {
       textarea: null,
       keyboardContainer: null,
       keys: [],
+      el: null,
     };
     this.properties = {
       isCapsLock: false,
@@ -44,6 +45,13 @@ export default class Keyboard {
         'leftctrl', 'win', 'leftalt', 'spacebar', 'rightalt', 'leftarrow', 'downarrow', 'rightarrow', 'rightctrl',
       ],
     };
+    this.keyCodes = [
+      'Backquote', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0', 'Minus', 'Equal', 'Backspace',
+      'Tab', 'KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP', 'BracketLeft', 'BracketRight', 'Backslash', 'Delete',
+      'CapsLock', 'KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK', 'KeyL', 'Semicolon', 'Quote', 'Enter',
+      'ShiftLeft', 'KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM', 'Comma', 'Period', 'Slash', 'ArrowUp', 'ShiftRight',
+      'ControlLeft', 'OSLeft', 'AltLeft', 'Space', 'AltRight', 'ArrowLeft', 'ArrowDown', 'ArrowRight', 'ControlRight',
+    ];
   }
 
   init() {
@@ -62,6 +70,9 @@ export default class Keyboard {
     this.elements.keys = this.elements.keyboardContainer.querySelectorAll('.key');
 
     this.render();
+
+    this.elements.textarea.addEventListener('keyup', (event) => this.keyboardClick(event));
+    this.elements.textarea.addEventListener('keydown', (event) => this.keyboardClick(event));
   }
 
   createKeys() {
@@ -70,7 +81,7 @@ export default class Keyboard {
 
     const iconForKey = (iconName) => `<span class="material-icons">${iconName}</span>`;
 
-    keyLayout.forEach((key) => {
+    keyLayout.forEach((key, index) => {
       const keyElement = document.createElement('button');
       keyElement.setAttribute('type', 'button');
       keyElement.classList.add('key');
@@ -144,6 +155,7 @@ export default class Keyboard {
           break;
       }
       keyElement.setAttribute('data-key', key);
+      keyElement.setAttribute('data-code', this.keyCodes[index]);
 
       keyElement.addEventListener('click', (event) => this.mouseClick(event));
 
@@ -172,6 +184,25 @@ export default class Keyboard {
     if (this.properties.isLangSwitched) {
       this.properties.isLangSwitched = !this.properties.isLangSwitched;
     }
+  }
+
+  keyboardClick(event) {
+    const kCode = event.code;
+    const keys = this.elements.keyboardContainer.querySelectorAll('.key');
+    this.keyCodes.forEach((keyCode, index) => {
+      if (kCode === keyCode) {
+        this.elements.el = keys[index];
+        this.elements.el.classList.add('pressed');
+      }
+    });
+    if (event.type === 'keyup') {
+      this.checkCtrlAlt();
+    }
+  }
+
+  checkCtrlAlt() {
+    const keys = this.elements.keyboardContainer.querySelectorAll('.key');
+    keys.forEach((key) => key.classList.remove('pressed'));
   }
 
   mouseClick(event) {
