@@ -144,7 +144,7 @@ export default class Keyboard {
     if (this.properties.isShiftPressed) {
       res = this.layouts.enShift[this.layouts.en.indexOf(symbol)];
     }
-    return res;
+    return (this.properties.isCapsLock && this.properties.isShiftPressed) ? res.toLowerCase() : res;
   }
 
   reLoadKeys(nodes) {
@@ -159,9 +159,7 @@ export default class Keyboard {
     const textArea = this.elements.textarea;
     let cursorPosition = textArea.selectionStart + 1;
     let [value, start, end] = [
-      (this.properties.isCapsLock)
-        ? this.chooseSymbol(content).toUpperCase()
-        : this.chooseSymbol(content),
+      this.chooseSymbol(content),
       textArea.selectionStart,
       textArea.selectionEnd,
     ];
