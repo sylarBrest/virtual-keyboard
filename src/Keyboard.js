@@ -11,6 +11,7 @@ export default class Keyboard {
       isShiftPressed: false,
       isCtrlPressed: false,
       isAltPressed: false,
+      isLangSwitched: false,
       lang: 'en',
     };
     this.layouts = {
@@ -152,11 +153,13 @@ export default class Keyboard {
   }
 
   chooseSymbol(symbol) {
+    const [lang, langShift] = [this.properties.lang, `${this.properties.lang}Shift`];
+    const letter = this.layouts[lang][this.layouts.en.indexOf(symbol)];
     let res = (this.properties.isCapsLock)
-      ? symbol.toUpperCase()
-      : symbol;
+      ? letter.toUpperCase()
+      : letter;
     if (this.properties.isShiftPressed) {
-      res = this.layouts.enShift[this.layouts.en.indexOf(symbol)];
+      res = this.layouts[langShift][this.layouts.en.indexOf(symbol)];
     }
     return (this.properties.isCapsLock && this.properties.isShiftPressed) ? res.toLowerCase() : res;
   }
@@ -166,6 +169,9 @@ export default class Keyboard {
       const el = key;
       el.textContent = this.chooseSymbol(el.dataset.key);
     });
+    if (this.properties.isLangSwitched) {
+      this.properties.isLangSwitched = !this.properties.isLangSwitched;
+    }
   }
 
   mouseClick(event) {
@@ -205,8 +211,16 @@ export default class Keyboard {
         break;
       case 'leftctrl':
       case 'rightctrl':
+        event.currentTarget.classList.toggle('pressed');
+        this.properties.isCtrlPressed = !this.properties.isCtrlPressed;
+        [value, cursorPosition] = ['', textArea.selectionStart];
+        break;
       case 'leftalt':
       case 'rightalt':
+        event.currentTarget.classList.toggle('pressed');
+        this.properties.isAltPressed = !this.properties.isAltPressed;
+        [value, cursorPosition] = ['', textArea.selectionStart];
+        break;
       case 'win':
         [value, cursorPosition] = ['', textArea.selectionStart];
         break;
@@ -234,6 +248,12 @@ export default class Keyboard {
     if (content !== 'leftshift' && content !== 'rightshift' && content !== 'capslock') {
       if (this.properties.isShiftPressed) this.shiftKeyOn();
     }
+
+    // switching langs
+    if (this.properties.isCtrlPressed && this.properties.isAltPressed) {
+      this.switchLang();
+    }
+
     this.elements.textarea.focus();
     this.elements.textarea.selectionStart = cursorPosition;
   }
@@ -254,6 +274,16 @@ export default class Keyboard {
       shifts.forEach((key) => key.classList.remove('pressed'));
     }
     this.reLoadKeys(keys);
+  }
+
+  switchLang() {
+    this.properties.isLangSwitched = !this.properties.isLangSwitched;
+    this.properties.lang = (this.properties.lang === 'ru') ? 'en' : 'ru';
+    const keys = this.elements.keyboardContainer.querySelectorAll('.symbol');
+    console.log('test');
+    this.reLoadKeys(keys);
+    this.properties.isCtrlPressed = false;
+    this.properties.isAltPressed = false;
   }
 
   render() {
