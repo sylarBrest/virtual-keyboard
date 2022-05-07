@@ -50,7 +50,7 @@ export default class Keyboard {
       'Tab', 'KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP', 'BracketLeft', 'BracketRight', 'Backslash', 'Delete',
       'CapsLock', 'KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK', 'KeyL', 'Semicolon', 'Quote', 'Enter',
       'ShiftLeft', 'KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM', 'Comma', 'Period', 'Slash', 'ArrowUp', 'ShiftRight',
-      'ControlLeft', 'OSLeft', 'AltLeft', 'Space', 'AltRight', 'ArrowLeft', 'ArrowDown', 'ArrowRight', 'ControlRight',
+      'ControlLeft', 'MetaLeft', 'AltLeft', 'Space', 'AltRight', 'ArrowLeft', 'ArrowDown', 'ArrowRight', 'ControlRight',
     ];
   }
 
@@ -200,7 +200,7 @@ export default class Keyboard {
     });
     if (event.type === 'keyup') {
       this.toDo(keys[this.keyCodes.indexOf(kCode)]);
-      this.checkCtrlAlt();
+      this.removePressed();
     }
   }
 
@@ -216,10 +216,16 @@ export default class Keyboard {
       ];
       switch (content) {
         case 'Delete':
-          [value, end] = ['', textArea.selectionEnd + 1];
+          value = '';
+          end = (textArea.selectionStart === textArea.selectionEnd)
+            ? textArea.selectionEnd + 1
+            : textArea.selectionEnd;
           break;
         case 'Backspace':
-          [value, start] = ['', textArea.selectionStart - 1];
+          value = '';
+          start = (textArea.selectionStart === textArea.selectionEnd)
+            ? textArea.selectionStart - 1
+            : textArea.selectionStart;
           break;
         case 'Enter':
           value = '\n';
@@ -256,7 +262,7 @@ export default class Keyboard {
           this.properties.isAltPressed = !this.properties.isAltPressed;
           [value, cursorPosition] = ['', textArea.selectionStart];
           break;
-        case 'OSLeft':
+        case 'MetaLeft':
           [value, cursorPosition] = ['', textArea.selectionStart];
           break;
         case 'ArrowUp':
@@ -280,21 +286,17 @@ export default class Keyboard {
         cursorPosition = textArea.selectionStart;
       }
       // shift key works only once after press any button except both shifts and capslock
-      if (content !== 'ShiftLeft' && content !== 'ShiftRight' && content !== 'CapsLock') {
-        if (this.properties.isShiftPressed) this.shiftKeyOn();
-      }
+      this.checkShiftPressed(content);
 
       // switching langs
-      if (this.properties.isCtrlPressed && this.properties.isAltPressed) {
-        this.switchLang();
-      }
+      this.checkSwitchLang(content);
 
       this.elements.textarea.focus();
       this.elements.textarea.selectionStart = cursorPosition;
     }
   }
 
-  checkCtrlAlt() {
+  removePressed() {
     const keys = this.elements.keyboardContainer.querySelectorAll('.key');
     keys.forEach((key) => {
       if (key.dataset.code !== 'ShiftLeft' && key.dataset.code !== 'ShiftRight' && key.dataset.code !== 'CapsLock') {
@@ -313,6 +315,12 @@ export default class Keyboard {
     this.reLoadKeys(keys);
   }
 
+  checkShiftPressed(content) {
+    if (content !== 'ShiftLeft' && content !== 'ShiftRight' && content !== 'CapsLock') {
+      if (this.properties.isShiftPressed) this.shiftKeyOn();
+    }
+  }
+
   shiftKeyOn(node = null) {
     this.properties.isShiftPressed = !this.properties.isShiftPressed;
     const shifts = this.elements.keyboardContainer.querySelectorAll('.shift');
@@ -325,24 +333,55 @@ export default class Keyboard {
     this.reLoadKeys(keys);
   }
 
+  checkSwitchLang(content) {
+    if (content === 'ControlLeft' || content === 'ControlRight') {
+      if (!this.properties.isCtrlPressed) {
+        this.removePressed();
+      }
+      if (this.properties.isCtrlPressed && this.properties.isAltPressed) {
+        this.switchLang();
+      }
+    } else if (content === 'AltLeft' || content === 'AltRight') {
+      if (!this.properties.isAltPressed) {
+        this.removePressed();
+      }
+      if (this.properties.isCtrlPressed && this.properties.isAltPressed) {
+        this.switchLang();
+      }
+    } else {
+      this.properties.isAltPressed = false;
+      this.properties.isCtrlPressed = false;
+      this.removePressed();
+    }
+  }
+
   switchLang() {
     this.properties.isLangSwitched = !this.properties.isLangSwitched;
     this.properties.lang = (this.properties.lang === 'ru') ? 'en' : 'ru';
     const keys = this.elements.keyboardContainer.querySelectorAll('.symbol');
-    console.log('test');
     this.reLoadKeys(keys);
     this.properties.isCtrlPressed = false;
     this.properties.isAltPressed = false;
+    this.removePressed();
   }
 
   render() {
     document.body.prepend(this.elements.main);
+    const heading = document.createElement('h1');
+    heading.textContent = 'RSS Virtual Keyboard';
+    this.elements.main.appendChild(heading);
     this.elements.main.appendChild(this.elements.textarea);
     this.elements.main.appendChild(this.elements.keyboardContainer);
     this.elements.keyboardContainer.appendChild(this.createKeys());
+    const add1 = document.createElement('p');
+    const add2 = document.createElement('p');
+    add1.textContent = 'Клавиатура создана в операционной среде Windows';
+    add2.textContent = 'Клавиши для переключения языка - Ctrl + Alt';
+    this.elements.main.appendChild(add1);
+    this.elements.main.appendChild(add2);
   }
 
   toString() {
-    return this.properties;
+    return JSON.stringify(this.properties);
   }
 }
