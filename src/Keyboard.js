@@ -381,7 +381,13 @@ export default class Keyboard {
     this.elements.main.appendChild(add2);
   }
 
-  toString() {
-    return JSON.stringify(this.properties);
+  getLang() {
+    return this.properties.lang;
+  }
+
+  setLang(lng) {
+    this.properties.lang = lng;
+    const keys = this.elements.keyboardContainer.querySelectorAll('.symbol');
+    this.reLoadKeys(keys);
   }
 }
