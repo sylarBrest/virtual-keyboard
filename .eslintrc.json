@@ -10,7 +10,6 @@
     "parserOptions": {
         "ecmaVersion": "latest"
     },
-    "ignorePatterns": ["webpack.config.js", "public/script.js"],
     "rules": {
         "no-console": 0
     }
