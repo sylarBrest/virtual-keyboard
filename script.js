@@ -4,8 +4,6 @@ class Keyboard {
       main: null,
       textarea: null,
       keyboardContainer: null,
-      keys: [],
-      el: null,
     };
     this.properties = {
       isCapsLock: false,
@@ -67,7 +65,6 @@ class Keyboard {
 
     this.elements.keyboardContainer = document.createElement('div');
     this.elements.keyboardContainer.classList.add('keyboard');
-    this.elements.keys = this.elements.keyboardContainer.querySelectorAll('.key');
 
     this.render();
 
@@ -95,11 +92,13 @@ class Keyboard {
         case 'leftctrl':
         case 'rightctrl':
           keyElement.classList.add('text');
+          keyElement.classList.add('lng-switch');
           keyElement.textContent = 'ctrl';
           break;
         case 'leftalt':
         case 'rightalt':
           keyElement.classList.add('text');
+          keyElement.classList.add('lng-switch');
           keyElement.textContent = 'alt';
           break;
         // Normal buttons with icons
@@ -252,13 +251,21 @@ class Keyboard {
           break;
         case 'ControlLeft':
         case 'ControlRight':
-          node.classList.toggle('pressed');
+          if (!this.properties.isCtrlPressed) {
+            node.classList.add('pressed');
+          } else {
+            node.classList.remove('pressed');
+          }
           this.properties.isCtrlPressed = !this.properties.isCtrlPressed;
           [value, cursorPosition] = ['', textArea.selectionStart];
           break;
         case 'AltLeft':
         case 'AltRight':
-          node.classList.toggle('pressed');
+          if (!this.properties.isAltPressed) {
+            node.classList.add('pressed');
+          } else {
+            node.classList.remove('pressed');
+          }
           this.properties.isAltPressed = !this.properties.isAltPressed;
           [value, cursorPosition] = ['', textArea.selectionStart];
           break;
@@ -299,8 +306,18 @@ class Keyboard {
   removePressed() {
     const keys = this.elements.keyboardContainer.querySelectorAll('.key');
     keys.forEach((key) => {
-      if (key.dataset.code !== 'ShiftLeft' && key.dataset.code !== 'ShiftRight' && key.dataset.code !== 'CapsLock') {
-        key.classList.remove('pressed');
+      switch (key.dataset.code) {
+        case 'ShiftLeft':
+        case 'ShiftRight':
+        case 'CapsLock':
+        case 'ControlLeft':
+        case 'ControlRight':
+        case 'AltLeft':
+        case 'AltRight':
+          break;
+        default:
+          key.classList.remove('pressed');
+          break;
       }
     });
   }
@@ -333,25 +350,35 @@ class Keyboard {
     this.reLoadKeys(keys);
   }
 
+  removePressedLngSwitch() {
+    const lngSwitch = this.elements.keyboardContainer.querySelectorAll('.lng-switch');
+    lngSwitch.forEach((key) => key.classList.remove('pressed'));
+  }
+
   checkSwitchLang(content) {
     if (content === 'ControlLeft' || content === 'ControlRight') {
       if (!this.properties.isCtrlPressed) {
         this.removePressed();
+        this.removePressedLngSwitch();
       }
       if (this.properties.isCtrlPressed && this.properties.isAltPressed) {
         this.switchLang();
+        this.removePressedLngSwitch();
       }
     } else if (content === 'AltLeft' || content === 'AltRight') {
       if (!this.properties.isAltPressed) {
         this.removePressed();
+        this.removePressedLngSwitch();
       }
       if (this.properties.isCtrlPressed && this.properties.isAltPressed) {
         this.switchLang();
+        this.removePressedLngSwitch();
       }
     } else {
       this.properties.isAltPressed = false;
       this.properties.isCtrlPressed = false;
       this.removePressed();
+      this.removePressedLngSwitch();
     }
   }
 
